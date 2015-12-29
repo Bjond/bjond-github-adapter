@@ -5,7 +5,11 @@
 # Home page
 GET     /                           controllers.Application.index
 
+# Serve the service-wide schema
 GET		/config/schema				controllers.Application.schema
+GET     /config/schema/user         controllers.Application.userSchema
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+
+GET		/register/service 			controllers.Application.registerService
