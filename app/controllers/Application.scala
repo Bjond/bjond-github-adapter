@@ -1,10 +1,9 @@
 package controllers
 
-import play.api._
+import _root_.com.bjond.RegistrationService
+import controllers.config.ServiceConfiguration
 import play.api.mvc._
 import org.coursera.autoschema.AutoSchema.createSchema
-import controllers.config._
-import java.util.UUID
 import org.log4s._
 import play.api.data._
 import play.api.data.Forms._
@@ -27,6 +26,8 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
   def registerService = Action { implicit request =>
     val serverData = serverForm.bindFromRequest.get
     val server = serverData.server
+    val registrationService = new RegistrationService();
+    registrationService.registerService(server);
     Ok(views.html.index("Service Successfully Registered!", serverForm.bindFromRequest))
   }
 
