@@ -1,10 +1,8 @@
 package com.bjond
 
-import play.api._
 import play.api.mvc._
 import play.api.libs.ws._
 import play.api.Play.current
-import play.mvc.Http.Response
 import scala.concurrent.Future
 import play.api.libs.json._
 import play.api.libs.functional.syntax._

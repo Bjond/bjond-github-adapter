@@ -1,21 +1,35 @@
 package controllers
 
 import _root_.com.bjond.RegistrationService
-import controllers.config.ServiceConfiguration
+import _root_.com.typesafe.scalalogging.LazyLogging
+import controllers.config.GroupConfiguration
+import play.api.libs.functional.syntax._
+import play.api.libs.iteratee.Enumerator
+import play.api.libs.json._
 import play.api.mvc._
 import org.coursera.autoschema.AutoSchema.createSchema
-import org.log4s._
 import play.api.data._
 import play.api.data.Forms._
 import javax.inject.Inject
 import play.api.i18n._
+import com.bjond.persistence._
+import scala.concurrent.Future
 
 case class ServerData(server: String)
 
-class Application @Inject()(val messagesApi: MessagesApi) extends Controller with I18nSupport {
+class Application @Inject()(val messagesApi: MessagesApi) extends Controller with I18nSupport with LazyLogging {
 
-  private[this] val logger = getLogger
-  private[this] val configClass = new ServiceConfiguration()
+  implicit val context = play.api.libs.concurrent.Execution.Implicits.defaultContext
+
+  implicit val groupConfigurationWrites: Writes[GroupConfiguration] = (
+      (JsPath \ "groupid").write[String] and
+      (JsPath \ "gitHubAPIKey").write[String]
+    )(unlift(GroupConfiguration.unapply))
+
+  implicit val groupConfigurationReads: Reads[GroupConfiguration] = (
+      (JsPath \ "groupid").read[String] and
+      (JsPath \ "gitHubAPIKey").read[String]
+    )(GroupConfiguration.apply _)
 
   val serverForm = Form(
     mapping(
@@ -26,8 +40,8 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
   def registerService = Action { implicit request =>
     val serverData = serverForm.bindFromRequest.get
     val server = serverData.server
-    val registrationService = new RegistrationService();
-    registrationService.registerService(server);
+    val registrationService = new RegistrationService()
+    registrationService.registerService(server)
     Ok(views.html.index("Service Successfully Registered!", serverForm.bindFromRequest))
   }
 
@@ -36,12 +50,33 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
   }
 
   def schema = Action {
-    val schema = createSchema[configClass.GroupConfiguration]
+    val schema = createSchema[GroupConfiguration]
     Ok(schema)
   }
 
   def userSchema = Action {
     Ok("{result: 'ok'}")
+  }
+
+  def configureGroup(groupid: String) = Action.async { implicit request =>
+    val body = request.body;
+    val mongoService = new MongoService()
+    val config = Json.fromJson[GroupConfiguration](body.asJson.get)
+    val future = mongoService.insertGroupConfig(groupid, config.get)
+    future.map {
+      response => Result(
+        header = ResponseHeader(200, Map(CONTENT_TYPE -> "text/plain")),
+        body = Enumerator(response.message.getBytes())
+      )
+    }
+  }
+
+  def getGroupConfiguration(groupid: String) = Action.async {
+    val mongoService = new MongoService()
+    val future = mongoService.getGroupConfiguration(groupid)
+    future.map {
+      response => Ok(Json.toJson(response.get))
+    }
   }
 
 }

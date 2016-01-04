@@ -13,12 +13,13 @@ libraryDependencies ++= Seq(
   jdbc,
   cache,
   ws,
-  specs2 % Test
+  specs2 % Test,
+  "org.reactivemongo" %% "reactivemongo" % "0.11.9"
 )
 
 libraryDependencies += "org.coursera" %% "autoschema" % "0.2"
 libraryDependencies += "com.typesafe.play.extras" %% "iteratees-extras" % "1.5.0"
-libraryDependencies += "org.log4s" %% "log4s" % "1.2.1"
+libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0"
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 
