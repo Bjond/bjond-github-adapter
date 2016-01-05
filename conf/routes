@@ -16,3 +16,7 @@ GET     /config/:groupid/read       controllers.Application.getGroupConfiguratio
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
 
 GET		/register/service 			controllers.Application.registerService
+
+# Todo- the individual can't configure this- must be an option. They won't know our id.
+# The GitHub Webhook will be [host]:[port]/event/github/[groupid]
+POST    /event/github/:groupid      controllers.Application.handleGitHubEvent(groupid: String)
