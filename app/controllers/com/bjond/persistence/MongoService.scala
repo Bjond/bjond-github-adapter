@@ -22,14 +22,18 @@ class MongoService {
   implicit object GroupConfigurationWriter extends BSONDocumentWriter[GroupConfiguration] {
     def write(config: GroupConfiguration): BSONDocument = BSONDocument(
       "groupid" -> config.groupid,
-      "gitHubAPIKey" -> config.gitHubAPIKey)
+      "gitHubAPIKey" -> config.gitHubAPIKey,
+      "username" -> config.username,
+      "password" -> config.password)
   }
 
   implicit object GroupConfigurationReader extends BSONDocumentReader[GroupConfiguration] {
     def read(doc: BSONDocument): GroupConfiguration = {
       GroupConfiguration(
         doc.getAs[String]("groupid").get,
-        doc.getAs[String]("gitHubAPIKey").get)
+        doc.getAs[String]("gitHubAPIKey").get,
+        doc.getAs[String]("username").get,
+        doc.getAs[String]("password").get)
     }
   }
 
@@ -41,9 +45,9 @@ class MongoService {
 
   def insertGroupConfig(groupid: String, config: GroupConfiguration): Future[WriteResult] = {
     val db = connect()
-    val configuration = config.copy(groupid, config.gitHubAPIKey)
+    val configuration = config.copy(groupid, config.gitHubAPIKey, config.username, config.password)
     val selector = BSONDocument("groupid" -> groupid)
-    db[BSONCollection]("configurations").update(selector, configuration)
+    db[BSONCollection]("configurations").update(selector, configuration, upsert = true)
   }
 
   def getGroupConfiguration(groupid: String): Future[Option[GroupConfiguration]] = {

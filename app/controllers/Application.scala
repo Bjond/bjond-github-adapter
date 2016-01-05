@@ -22,13 +22,17 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
   implicit val context = play.api.libs.concurrent.Execution.Implicits.defaultContext
 
   implicit val groupConfigurationWrites: Writes[GroupConfiguration] = (
-      (JsPath \ "groupid").write[String] and
-      (JsPath \ "gitHubAPIKey").write[String]
+        (JsPath \ "groupid").write[String] and
+        (JsPath \ "gitHubAPIKey").write[String] and
+        (JsPath \ "username").write[String] and
+        (JsPath \ "password").write[String]
     )(unlift(GroupConfiguration.unapply))
 
   implicit val groupConfigurationReads: Reads[GroupConfiguration] = (
-      (JsPath \ "groupid").read[String] and
-      (JsPath \ "gitHubAPIKey").read[String]
+        (JsPath \ "groupid").read[String] and
+        (JsPath \ "gitHubAPIKey").read[String] and
+        (JsPath \ "username").read[String] and
+        (JsPath \ "password").read[String]
     )(GroupConfiguration.apply _)
 
   val serverForm = Form(
@@ -75,7 +79,7 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
     val mongoService = new MongoService()
     val future = mongoService.getGroupConfiguration(groupid)
     future.map {
-      response => Ok(Json.toJson(response.get))
+      response => if(response != None) Ok(Json.toJson(response.get)) else Ok(Json.toJson(new GroupConfiguration("", "", "", "")))
     }
   }
 
