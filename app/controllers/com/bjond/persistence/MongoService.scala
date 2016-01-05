@@ -1,6 +1,6 @@
 package controllers.com.bjond.persistence
 
-import controllers.config.GroupConfiguration
+import controllers.config._
 import play.api.libs.json.{JsObject, JsValue, JsPath, Writes}
 import play.api.mvc.AnyContent
 import play.libs.Json
@@ -37,6 +37,21 @@ class MongoService {
     }
   }
 
+  implicit object BjondRegistrationWriter extends BSONDocumentWriter[BjondRegistration] {
+    def write(registration: BjondRegistration): BSONDocument = BSONDocument (
+      "id" -> registration.id,
+      "url" -> registration.url)
+  }
+
+  implicit object BjondRegistrationReader extends BSONDocumentReader[BjondRegistration] {
+    def read(doc: BSONDocument): BjondRegistration = {
+      BjondRegistration(
+        doc.getAs[String]("id").get,
+        doc.getAs[String]("url").get
+      )
+    }
+  }
+
   def connect() : DefaultDB = {
     val driver = new MongoDriver
     val connection = driver.connection(List("localhost"))
@@ -44,16 +59,29 @@ class MongoService {
   }
 
   def insertGroupConfig(groupid: String, config: GroupConfiguration): Future[WriteResult] = {
-    val db = connect()
+    val db = connect
     val configuration = config.copy(groupid, config.gitHubAPIKey, config.username, config.password)
     val selector = BSONDocument("groupid" -> groupid)
     db[BSONCollection]("configurations").update(selector, configuration, upsert = true)
   }
 
   def getGroupConfiguration(groupid: String): Future[Option[GroupConfiguration]] = {
-    val db = connect()
+    val db = connect
     val query = BSONDocument("groupid" -> groupid)
     db[BSONCollection]("configurations").find(query).one[GroupConfiguration]
+  }
+
+  def insertGroupEndpoint(groupid: String, url: String): Future[WriteResult] = {
+    val db = connect
+    val endpoint = new BjondRegistration(groupid, url)
+    val selector = BSONDocument("id" -> groupid)
+    db[BSONCollection]("endpoints").update(selector, endpoint, upsert = true)
+  }
+
+  def getGroupEndpoint(groupid: String) : Future[Option[BjondRegistration]] = {
+    val db = connect
+    val query = BSONDocument("id" -> groupid)
+    db[BSONCollection]("endpoints").find(query).one[BjondRegistration]
   }
 
 }

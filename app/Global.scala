@@ -26,5 +26,6 @@ object Global extends GlobalSettings {
     val connection = driver.connection(List("localhost"))
     val db = connection("bjond_github_adapter")
     db[BSONCollection]("configurations").create(true)
+    db[BSONCollection]("endpoints").create(true)
   }
 }

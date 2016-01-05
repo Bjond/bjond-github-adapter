@@ -83,4 +83,16 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
     }
   }
 
+  def registerBjondEndpoint(groupid: String) = Action.async { implicit request =>
+    val mongoService = new MongoService()
+    val endpoint = request.getQueryString("endpoint")
+    val future = mongoService.insertGroupEndpoint(groupid, endpoint.get)
+    future.map {
+      response => Result(
+        header = ResponseHeader(200, Map(CONTENT_TYPE -> "text/plain")),
+        body = Enumerator(response.message.getBytes())
+      )
+    }
+  }
+
 }
