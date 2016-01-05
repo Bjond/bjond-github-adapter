@@ -13,7 +13,6 @@ import play.api.data.Forms._
 import javax.inject.Inject
 import play.api.i18n._
 import com.bjond.persistence._
-import scala.concurrent.Future
 
 case class ServerData(server: String)
 
@@ -63,7 +62,7 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
   }
 
   def configureGroup(groupid: String) = Action.async { implicit request =>
-    val body = request.body;
+    val body = request.body
     val mongoService = new MongoService()
     val config = Json.fromJson[GroupConfiguration](body.asJson.get)
     val future = mongoService.insertGroupConfig(groupid, config.get)
@@ -93,6 +92,10 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
         body = Enumerator(response.message.getBytes())
       )
     }
+
+  def handleGitHubEvent(groupid: String) = Action { implicit request =>
+    val body = request.body
+    Ok("{result: 'ok'}")
   }
 
 }
