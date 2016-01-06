@@ -25,7 +25,8 @@ object Global extends GlobalSettings {
     val driver = new MongoDriver
     val connection = driver.connection(List("localhost"))
     val db = connection("bjond_github_adapter")
-    db[BSONCollection]("configurations").create(true)
-    db[BSONCollection]("endpoints").create(true)
+    val index = true
+    db[BSONCollection]("configurations").create(index)
+    db[BSONCollection]("endpoints").create(index)
   }
 }

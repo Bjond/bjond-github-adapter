@@ -78,7 +78,7 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
     val mongoService = new MongoService()
     val future = mongoService.getGroupConfiguration(groupid)
     future.map {
-      response => if(response != None) Ok(Json.toJson(response.get)) else Ok(Json.toJson(new GroupConfiguration("", "", "", "")))
+      response => if(response.isDefined) Ok(Json.toJson(response.get)) else Ok(Json.toJson(new GroupConfiguration("", "", "", "")))
     }
   }
 
@@ -92,9 +92,10 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
         body = Enumerator(response.message.getBytes())
       )
     }
+  }
 
   def handleGitHubEvent(groupid: String) = Action { implicit request =>
-    val body = request.body
+    //val body = request.body
     Ok("{result: 'ok'}")
   }
 
