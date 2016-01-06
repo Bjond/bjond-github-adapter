@@ -96,6 +96,7 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
 
   def handleGitHubEvent(groupid: String) = Action { implicit request =>
     val body = request.body
+    logger.info(body.asText.get)
     Ok("{result: 'ok'}")
   }
 
