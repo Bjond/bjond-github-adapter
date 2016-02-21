@@ -14,3 +14,13 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-rjs" % "1.0.7")
 addSbtPlugin("com.typesafe.sbt" % "sbt-digest" % "1.1.0")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-mocha" % "1.1.0")
+
+resolvers += Resolver.sonatypeRepo("snapshots")
+
+// Eclipse
+
+addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "4.0.0")
+
+// Sublime Text
+
+addSbtPlugin("org.ensime" % "ensime-sbt" % "0.1.5-SNAPSHOT")
