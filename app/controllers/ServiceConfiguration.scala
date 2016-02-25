@@ -1,4 +1,4 @@
-package controllers.config
+package controllers
 
 import org.coursera.autoschema.annotations._
 

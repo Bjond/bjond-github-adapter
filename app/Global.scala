@@ -1,4 +1,4 @@
-import controllers.com.bjond.persistence.MongoService
+import controllers.MongoService
 import play.api._
 import reactivemongo.api.MongoDriver
 import reactivemongo.api.collections.bson.BSONCollection
