@@ -1,8 +1,6 @@
 package controllers
 
-import _root_.com.bjond.RegistrationService
 import _root_.com.typesafe.scalalogging.LazyLogging
-import controllers.config.GroupConfiguration
 import play.api.libs.functional.syntax._
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
@@ -12,7 +10,6 @@ import play.api.data._
 import play.api.data.Forms._
 import javax.inject.Inject
 import play.api.i18n._
-import com.bjond.persistence._
 
 case class ServerData(server: String)
 
@@ -95,8 +92,8 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
   }
 
   def handleGitHubEvent(groupid: String) = Action { implicit request =>
-    val body = request.body
-    logger.error(body.asJson.get.toString())
+    val body = request.body.asJson
+    logger.error(body.get.toString())
     Ok("{result: 'ok'}")
   }
 

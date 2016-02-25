@@ -1,13 +1,12 @@
-package controllers.com.bjond.persistence
+package controllers
 
-import controllers.config._
 import reactivemongo.api._
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.api.commands.WriteResult
 import reactivemongo.bson.{BSONDocumentReader, BSONDocumentWriter, BSONDocument}
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import scala.concurrent.Future
+import reactivemongo.bson.Producer.nameValue2Producer
 
 /**
   * Created by bcflynn on 12/30/15.
