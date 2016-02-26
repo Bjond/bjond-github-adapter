@@ -10,6 +10,9 @@ import play.api.data._
 import play.api.data.Forms._
 import javax.inject.Inject
 import play.api.i18n._
+import scala.concurrent.Future
+import play.api.libs.ws._
+import play.api.Play.current
 
 case class ServerData(server: String)
 
@@ -91,10 +94,22 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
     }
   }
 
-  def handleGitHubEvent(groupid: String) = Action { implicit request =>
+  def handleGitHubEvent(groupid: String) = Action.async { implicit request =>
     val body = request.body.asJson
-    logger.error(body.get.toString())
-    Ok("{result: 'ok'}")
+    logger.error(body.get.toString()) 
+    val mongoService = new MongoService()
+    val future = mongoService.getGroupEndpoint(groupid)
+    future.map {
+      response => 
+        val futureResponse: Future[String] = WS.url((response.get.url)).post("sdfgsdgfsdfg").map {
+    			response => (response.json \ "status").as[String]}
+        futureResponse.recover {
+          case e: Exception =>
+            val exceptionData = Map("error" -> Seq(e.getMessage))
+            logger.error(exceptionData.get("error").get.toString());
+        }
+        Ok("{result: 'ok'}")
+    }
   }
 
 }
