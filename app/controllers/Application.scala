@@ -105,8 +105,8 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
     			response => (response.json \ "status").as[String]}
         futureResponse.recover {
           case e: Exception =>
-            val exceptionData = Map("error" -> Seq(e.getMessage))
-            logger.error(exceptionData.get("error").get.toString());
+            logger.error(e.getMessage);
+            Status(500)
         }
         Ok("{result: 'ok'}")
     }
