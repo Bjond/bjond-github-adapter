@@ -8,12 +8,16 @@ import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import play.api.libs.json.JsValue.jsValueToJsLookup
 
+case class EventField(id: String, jsonKey: String, name: String, description: String, fieldType: String, event: String)
+case class EventDefinition(id: String, jsonKey: String, name: String, description: String, fields: Set[EventField])
+case class ServiceDefinition(id: String, name: String, author: String, description: String, iconURL: String, configURL: String, availableFieldsURL: String, integrationEvent: Set[EventDefinition])
+
 class RegistrationService extends Controller {
 
 	implicit val context = play.api.libs.concurrent.Execution.Implicits.defaultContext
-	case class EventField(id: String, jsonKey: String, name: String, description: String, fieldType: String, event: String)
-	case class EventDefinition(id: String, jsonKey: String, name: String, description: String, fields: Set[EventField])
-	case class ServiceDefinition(id: String, name: String, author: String, description: String, iconURL: String, configURL: String, availableFieldsURL: String, integrationEvent: Set[EventDefinition])
+	//case class EventField(id: String, jsonKey: String, name: String, description: String, fieldType: String, event: String)
+	//case class EventDefinition(id: String, jsonKey: String, name: String, description: String, fields: Set[EventField])
+	//case class ServiceDefinition(id: String, name: String, author: String, description: String, iconURL: String, configURL: String, availableFieldsURL: String, integrationEvent: Set[EventDefinition])
 	
 	implicit val eventFieldWrites: Writes[EventField] = (
 	  (JsPath \ "id").write[String] and

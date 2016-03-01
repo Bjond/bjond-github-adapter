@@ -99,6 +99,7 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
     logger.error(body.get.toString()) 
     val mongoService = new MongoService()
     val future = mongoService.getGroupEndpoint(groupid)
+    val eventType = request.headers.get("X-GitHub-Event")
     future.map {
       response => 
         val futureResponse: Future[String] = WS.url((response.get.url)).post("sdfgsdgfsdfg").map {
