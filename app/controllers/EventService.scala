@@ -27,14 +27,21 @@ class EventService extends Controller {
         (JsPath \ "user").read[String]
     )(IssueComment.apply _)
     
-  val blankJson: JsValue = Json.parse("{value : null}")
   
   val commentEventTransformer = (
-      (JsPath \ "assignee").json.copyFrom((JsPath \ "issue" \ "assignee" \ "login").json.pick.orElse(null)) and
-      (JsPath \ "user").json.copyFrom((JsPath \ "issue" \ "user" \ "login").json.pick.orElse(null)) and 
-      (JsPath \ "repo").json.copyFrom((JsPath \ "repository" \ "name").json.pick.orElse(null)) and
-      (JsPath \ "pull_request").json.copyFrom((JsPath \ "issue" \ "number").json.pick.orElse(null))
+      (JsPath \ "assignee").json.copyFrom((JsPath \ "issue" \ "assignee" \ "login").json.pick.filter(nullFilter)) and
+      (JsPath \ "user").json.copyFrom((JsPath \ "issue" \ "user" \ "login").json.pick.filter(nullFilter)) and 
+      (JsPath \ "repo").json.copyFrom((JsPath \ "repository" \ "name").json.pick.filter(nullFilter)) and
+      (JsPath \ "pull_request").json.copyFrom((JsPath \ "issue" \ "number").json.pick.filter(nullFilter))
     ) reduce
+    
+  def nullFilter(value: JsValue) = {
+    value match {
+      case JsNull => true
+      case JsString("") => true
+      case _ => false
+    }
+  }
   
   def getBodyType(body: Option[JsValue], eventType: String): JsValue = {
     {
