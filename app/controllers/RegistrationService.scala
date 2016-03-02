@@ -61,15 +61,21 @@ class RegistrationService extends Controller {
 		    EventField("c49b8734-6371-4b72-bc9e-547093245469", "assignee", "Assignee", "The user to whom the Pull Request is assigned.", "PERSON", "7c96b035-9502-4535-be70-bb052dc5f05c"),
 		    EventField("25f66f71-720a-45b3-9264-5a3f6b2ea82a", "repo", "Repository Name", "The name of the repository.", "STRING", "7c96b035-9502-4535-be70-bb052dc5f05c")))
 		    
+		val issueCommentEvent = EventDefinition("2c3ffb6f-ddda-4f21-93f9-257d46271010", "issue_comment", "GitHub Issue Comment", "A comment was made on an issue.", Set(
+		    EventField("b262dd2d-fe97-41d1-9443-faff95234512", "pull_request", "Pull Request", "The Pull Request ID.", "STRING", "2c3ffb6f-ddda-4f21-93f9-257d46271010"),
+		    EventField("e0f996be-15ea-485a-9199-0c18e1e1a7c1", "user", "User", "The creator of the Pull Request.", "PERSON", "2c3ffb6f-ddda-4f21-93f9-257d46271010"),
+		    EventField("e2667bca-5088-44b0-a940-5fb51a169fd3", "assignee", "Assignee", "The user to whom the Pull Request is assigned.", "PERSON", "2c3ffb6f-ddda-4f21-93f9-257d46271010"),
+		    EventField("2784d9c4-d231-4dd3-94f7-fe9a02c29dc8", "repo", "Repository Name", "The name of the repository.", "STRING", "2c3ffb6f-ddda-4f21-93f9-257d46271010")))
+		    
 		val pushEvent = EventDefinition("d6ac9d97-93fb-4b15-900f-f627223d5193", "push", "GitHub Push", "Triggers when someone pushes a change to a branch.", Set(
 		    EventField("a24033cc-21b3-4a83-969c-d244042a6338", "pusher", "Pusher", "The person who performed the push.", "PERSON", "d6ac9d97-93fb-4b15-900f-f627223d5193"),
 		    EventField("1939ac70-60af-41d9-b36c-fce2fcf625d5", "ref", "Reference", "The full ref of the push. Ths includes the repository and branch.", "STRING", "d6ac9d97-93fb-4b15-900f-f627223d5193"),
 		    EventField("adfb3566-523c-40fd-a7fc-ad2dc66747a1", "repo", "Repository Name", "The name of the repository.", "STRING", "d6ac9d97-93fb-4b15-900f-f627223d5193")))
 		    
-		val availableEvents = Set(pullRequestEvent, pullRequestCommentEvent, pushEvent)
+		val availableEvents = Set(pullRequestEvent, pullRequestCommentEvent, pushEvent, issueCommentEvent)
 		
 		val postData = ServiceDefinition("fae29c14-a2bc-11f5-9121-1a5c11784914", "GitHub Integration", "Bjönd, Inc", 
-			"With this service you can react to events in yoru GitHub oganization or repository. For instance, you can send someone a task when an issue is assigned, or notify a manager when that task expires.",
+			"With this service you can react to events in your GitHub oganization or repository. For instance, you can send someone a task when an issue is assigned, or notify a manager when that task expires.",
 			"http://localhost:9000/assets/images/github-logo.png", "http://localhost:9000/config", "http://localhost:9000/fields", availableEvents)
 
 		val futureResponse: Future[String] = WS.url(fullURL).post(Json.toJson(postData)).map {
