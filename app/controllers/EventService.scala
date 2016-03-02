@@ -28,9 +28,9 @@ class EventService extends Controller {
     )(IssueComment.apply _)
   
   val commentEventTransformer = (
-      (JsPath \ "assignee").json.copyFrom((JsPath \ "issue" \ "assignee" \ "login").json.pick) and
-      (JsPath \ "user").json.copyFrom((JsPath \ "issue" \ "user" \ "login").json.pick) and 
-      (JsPath \ "repo").json.copyFrom((JsPath \ "repository" \ "name").json.pick) and
+      (JsPath \ "assignee").json.copyFrom((JsPath \ "issue" \ "assignee" \ "login").json.pick.orElse(__.json.pick[JsValue])) and
+      (JsPath \ "user").json.copyFrom((JsPath \ "issue" \ "user" \ "login").json.pick.orElse(__.json.pick[JsValue])) and 
+      (JsPath \ "repo").json.copyFrom((JsPath \ "repository" \ "name").json.pick.orElse(__.json.pick[JsValue])) and
       (JsPath \ "pull_request").json.copyFrom((JsPath \ "issue" \ "number").json.pick.orElse(__.json.pick[JsValue]))
     ) reduce
   
