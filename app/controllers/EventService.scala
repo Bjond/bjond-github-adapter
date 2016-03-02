@@ -26,12 +26,14 @@ class EventService extends Controller {
         (JsPath \ "pull_request").read[String] and
         (JsPath \ "user").read[String]
     )(IssueComment.apply _)
+    
+  val blankJson: JsValue = Json.parse("{value : null}")
   
   val commentEventTransformer = (
-      (JsPath \ "assignee").json.copyFrom((JsPath \ "issue" \ "assignee" \ "login").json.pick.orElse(__.json.pick[JsValue])) and
-      (JsPath \ "user").json.copyFrom((JsPath \ "issue" \ "user" \ "login").json.pick.orElse(__.json.pick[JsValue])) and 
-      (JsPath \ "repo").json.copyFrom((JsPath \ "repository" \ "name").json.pick.orElse(__.json.pick[JsValue])) and
-      (JsPath \ "pull_request").json.copyFrom((JsPath \ "issue" \ "number").json.pick.orElse(__.json.pick[JsValue]))
+      (JsPath \ "assignee").json.copyFrom((JsPath \ "issue" \ "assignee" \ "login").json.pick.orElse(null)) and
+      (JsPath \ "user").json.copyFrom((JsPath \ "issue" \ "user" \ "login").json.pick.orElse(null)) and 
+      (JsPath \ "repo").json.copyFrom((JsPath \ "repository" \ "name").json.pick.orElse(null)) and
+      (JsPath \ "pull_request").json.copyFrom((JsPath \ "issue" \ "number").json.pick.orElse(null))
     ) reduce
   
   def getBodyType(body: Option[JsValue], eventType: String): JsValue = {
