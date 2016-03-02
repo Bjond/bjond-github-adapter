@@ -31,7 +31,7 @@ class EventService extends Controller {
       (JsPath \ "assignee").json.copyFrom((JsPath \ "issue" \ "assignee" \ "login").json.pick) and
       (JsPath \ "user").json.copyFrom((JsPath \ "issue" \ "user" \ "login").json.pick) and 
       (JsPath \ "repo").json.copyFrom((JsPath \ "repository" \ "name").json.pick) and
-      (JsPath \ "pull_request").json.copyFrom((JsPath \ "issue" \ "number").json.pick) 
+      (JsPath \ "pull_request").json.copyFrom((JsPath \ "issue" \ "number").json.pick.orElse(null))
     ) reduce
   
   def getBodyType(body: Option[JsValue], eventType: String): JsValue = {
