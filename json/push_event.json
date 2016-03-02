@@ -1,7 +1,7 @@
 //X-GitHub-Event,push
 
 {  
-   "action":"synchronize",
+   "action":"synchronize", 
    "number":2,
    "pull_request":{  
       "url":"https://api.github.com/repos/Bjond/bjond-github-adapter/pulls/2",
