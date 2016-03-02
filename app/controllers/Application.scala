@@ -101,7 +101,6 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
     val future = mongoService.getGroupEndpoint(groupid)
     val eventType = request.headers.get("X-GitHub-Event")
     val eventService = new EventService()
-    //val instanceType = eventService.getBodyType(body, eventType.get)
     future.map {
       response => 
         val futureResponse: Future[String] = eventService.fireEvent(response.get.url, body, eventType.get).map {
