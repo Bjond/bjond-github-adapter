@@ -36,6 +36,7 @@ class EventService extends Controller {
   
   def getBodyType(body: Option[JsValue], eventType: String): JsValue = {
     {
+      val test = body.get.transform(commentEventTransformer)
       val json = body.get.transform(commentEventTransformer).get
       setEvent(json, eventType)
     }
