@@ -36,7 +36,7 @@ class EventService extends Controller {
     ) reduce
     
   def nullFilter(value: JsValue) = {
-    value match {
+    value match { 
       case JsNull => true
       case JsString("") => true
       case _ => false
