@@ -77,7 +77,7 @@ class EventService extends Controller {
     json.as[JsObject] + ("event" -> Json.toJson(event))
   }
   
-  def getEvent(json: JsValue, eventType: String): String = {
+  def getEvent(json: JsValue, eventType: String): String = { 
     {
       if (eventType.equals("issue_comment") && !(json \ "issue" \ "pull_request").equals(null)) {
         "pull_request_review_comment"
