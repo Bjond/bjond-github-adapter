@@ -40,14 +40,6 @@ class EventService extends Controller {
       (JsPath \ "user").json.copyFrom((JsPath \ "issue" \ "user" \ "login").json.pick) and 
       (JsPath \ "repo").json.copyFrom((JsPath \ "repository" \ "name").json.pick) 
     ) reduce
-    
-  def nullFilter(value: JsValue) = {
-    value match {
-      case JsNull => true
-      case JsString("") => true
-      case _ => false
-    }
-  }
   
   def getBodyType(body: Option[JsValue], eventType: String): JsValue = {
     {
