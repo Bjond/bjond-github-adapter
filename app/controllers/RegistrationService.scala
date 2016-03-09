@@ -8,16 +8,12 @@ import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import play.api.libs.json.JsValue.jsValueToJsLookup
 
-case class EventField(id: String, jsonKey: String, name: String, description: String, fieldType: String, event: String)
-case class EventDefinition(id: String, jsonKey: String, name: String, description: String, fields: Set[EventField])
-case class ServiceDefinition(id: String, name: String, author: String, description: String, iconURL: String, configURL: String, availableFieldsURL: String, integrationEvent: Set[EventDefinition])
-
 class RegistrationService extends Controller {
 
 	implicit val context = play.api.libs.concurrent.Execution.Implicits.defaultContext
-	//case class EventField(id: String, jsonKey: String, name: String, description: String, fieldType: String, event: String)
-	//case class EventDefinition(id: String, jsonKey: String, name: String, description: String, fields: Set[EventField])
-	//case class ServiceDefinition(id: String, name: String, author: String, description: String, iconURL: String, configURL: String, availableFieldsURL: String, integrationEvent: Set[EventDefinition])
+	case class EventField(id: String, jsonKey: String, name: String, description: String, fieldType: String, event: String)
+	case class EventDefinition(id: String, jsonKey: String, name: String, description: String, fields: Set[EventField])
+	case class ServiceDefinition(id: String, name: String, author: String, description: String, iconURL: String, configURL: String, integrationEvent: Set[EventDefinition])
 	
 	implicit val eventFieldWrites: Writes[EventField] = (
 	  (JsPath \ "id").write[String] and
@@ -43,7 +39,6 @@ class RegistrationService extends Controller {
 	  (JsPath \ "description").write[String] and
 	  (JsPath \ "iconURL").write[String] and
 	  (JsPath \ "configURL").write[String] and
-	  (JsPath \ "availableFieldsURL").write[String] and
 	  (JsPath \ "integrationEvent").write[Set[EventDefinition]]
 	)(unlift(ServiceDefinition.unapply))
 
@@ -76,7 +71,7 @@ class RegistrationService extends Controller {
 		
 		val postData = ServiceDefinition("fae29c14-a2bc-11f5-9121-1a5c11784914", "GitHub Integration", "Bjönd, Inc", 
 			"With this service you can react to events in your GitHub oganization or repository. For instance, you can send someone a task when an issue is assigned, or notify a manager when that task expires.",
-			"http://localhost:9000/assets/images/github-logo.png", "http://localhost:9000/config", "http://localhost:9000/fields", availableEvents)
+			"http://localhost:9000/assets/images/github-logo.png", "http://localhost:9000/config", availableEvents)
 
 		val futureResponse: Future[String] = WS.url(fullURL).post(Json.toJson(postData)).map {
 			response => (response.json \ "status").as[String]
