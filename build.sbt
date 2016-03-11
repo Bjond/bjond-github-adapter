@@ -19,7 +19,7 @@ libraryDependencies ++= Seq(
 
 libraryDependencies += "org.coursera" %% "autoschema" % "0.2"
 libraryDependencies += "com.typesafe.play.extras" %% "iteratees-extras" % "1.5.0"
-libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0"
+// libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0"
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 

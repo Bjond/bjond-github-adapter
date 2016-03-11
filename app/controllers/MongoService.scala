@@ -30,6 +30,22 @@ class MongoService {
         doc.getAs[String]("password").get)
     }
   }
+  
+  implicit object UserConfigurationWriter extends BSONDocumentWriter[UserConfiguration] {
+    def write(config: UserConfiguration): BSONDocument = BSONDocument(
+      "groupid" -> config.groupid,
+      "userid" -> config.userid,
+      "gitHubUsername" -> config.gitHubUsername)
+  }
+
+  implicit object UserConfigurationReader extends BSONDocumentReader[UserConfiguration] {
+    def read(doc: BSONDocument): UserConfiguration = {
+      UserConfiguration(
+        doc.getAs[String]("groupid").get,
+        doc.getAs[String]("userid").get,
+        doc.getAs[String]("gitHubUsername").get)
+    }
+  }
 
   implicit object BjondRegistrationWriter extends BSONDocumentWriter[BjondRegistration] {
     def write(registration: BjondRegistration): BSONDocument = BSONDocument (
@@ -63,6 +79,19 @@ class MongoService {
     val db = connect()
     val query = BSONDocument("groupid" -> groupid)
     db[BSONCollection]("configurations").find(query).one[GroupConfiguration]
+  }
+  
+  def insertUserConfig(groupid: String, userid: String, config: UserConfiguration): Future[WriteResult] = {
+    val db = connect()
+    val configuration = config.copy(groupid, userid, config.gitHubUsername)
+    val selector = BSONDocument("groupid" -> groupid, "userid" -> userid)
+    db[BSONCollection]("user_configurations").update(selector, configuration, upsert = true)
+  }
+
+  def getUserConfiguration(groupid: String, userid: String): Future[Option[UserConfiguration]] = {
+    val db = connect()
+    val query = BSONDocument("groupid" -> groupid, "userid" -> userid)
+    db[BSONCollection]("user_configurations").find(query).one[UserConfiguration]
   }
 
   def insertGroupEndpoint(groupid: String, url: String): Future[WriteResult] = {

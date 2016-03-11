@@ -1,6 +1,5 @@
 package controllers
 
-import _root_.com.typesafe.scalalogging.LazyLogging
 import play.api.libs.functional.syntax._
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
@@ -13,10 +12,11 @@ import play.api.i18n._
 import scala.concurrent.Future
 import play.api.libs.ws._
 import play.api.Play.current
+import play.Logger
 
 case class ServerData(server: String)
 
-class Application @Inject()(val messagesApi: MessagesApi) extends Controller with I18nSupport with LazyLogging {
+class Application @Inject()(val messagesApi: MessagesApi) extends Controller with I18nSupport {
 
   implicit val context = play.api.libs.concurrent.Execution.Implicits.defaultContext
 
@@ -33,6 +33,18 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
         (JsPath \ "username").read[String] and
         (JsPath \ "password").read[String]
     )(GroupConfiguration.apply _)
+    
+  implicit val userConfigurationWrites: Writes[UserConfiguration] = (
+        (JsPath \ "groupid").write[String] and
+        (JsPath \ "userid").write[String] and
+        (JsPath \ "gitHubUsername").write[String]
+    )(unlift(UserConfiguration.unapply))
+
+  implicit val userConfigurationReads: Reads[UserConfiguration] = (
+        (JsPath \ "groupid").read[String] and
+        (JsPath \ "userid").read[String] and
+        (JsPath \ "gitHubUsername").read[String]
+    )(UserConfiguration.apply _)
 
   val serverForm = Form(
     mapping(
@@ -58,7 +70,8 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
   }
 
   def userSchema = Action {
-    Ok("{result: 'ok'}")
+    val schema = createSchema[UserConfiguration]
+    Ok(schema)
   }
 
   def configureGroup(groupid: String) = Action.async { implicit request =>
@@ -73,12 +86,33 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
       )
     }
   }
+  
+  def configureUser(groupid: String, userid: String) = Action.async { implicit request =>
+    val body = request.body
+    val mongoService = new MongoService()
+    val config = Json.fromJson[UserConfiguration](body.asJson.get)
+    val future = mongoService.insertUserConfig(groupid, userid, config.get)
+    future.map {
+      response => Result(
+        header = ResponseHeader(200, Map(CONTENT_TYPE -> "text/plain")),
+        body = Enumerator(response.message.getBytes())
+      )
+    }
+  }
 
   def getGroupConfiguration(groupid: String) = Action.async {
     val mongoService = new MongoService()
     val future = mongoService.getGroupConfiguration(groupid)
     future.map {
       response => if(response.isDefined) Ok(Json.toJson(response.get)) else Ok(Json.toJson(new GroupConfiguration("", "", "", "")))
+    }
+  }
+  
+  def getUserConfiguration(groupid: String, userid: String) = Action.async {
+    val mongoService = new MongoService()
+    val future = mongoService.getUserConfiguration(groupid, userid)
+    future.map {
+      response => if(response.isDefined) Ok(Json.toJson(response.get)) else Ok(Json.toJson(new UserConfiguration("", "", "")))
     }
   }
 
@@ -96,7 +130,7 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
 
   def handleGitHubEvent(groupid: String) = Action.async { implicit request =>
     val body = request.body.asJson
-    logger.error(body.get.toString()) 
+    Logger.info(body.get.toString()) 
     val mongoService = new MongoService()
     val future = mongoService.getGroupEndpoint(groupid)
     val eventType = request.headers.get("X-GitHub-Event")
@@ -107,7 +141,7 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
     			response => (response.json \ "status").as[String]}
         futureResponse.recover {
           case e: Exception =>
-            logger.error(e.getMessage);
+            Logger.error(e.getMessage);
             Status(500)
         }
         Ok("{result: 'ok'}")
