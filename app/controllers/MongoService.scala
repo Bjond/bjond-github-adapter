@@ -87,6 +87,12 @@ class MongoService {
     val selector = BSONDocument("groupid" -> groupid, "userid" -> userid)
     db[BSONCollection]("user_configurations").update(selector, configuration, upsert = true)
   }
+  
+  def getBjondID(groupid: String, gitHubUsername: String) {
+    val db = connect()
+    val query = BSONDocument("groupid" -> groupid, "gitHubUsername" -> gitHubUsername)
+    db[BSONCollection]("user_configurations").find(query).one[UserConfiguration]
+  }
 
   def getUserConfiguration(groupid: String, userid: String): Future[Option[UserConfiguration]] = {
     val db = connect()
