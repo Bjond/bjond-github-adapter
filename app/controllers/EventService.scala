@@ -66,6 +66,7 @@ class EventService extends Controller {
     {
       val filteredEventType: String = getEvent(body.get, eventType)
       val json = filteredEventType match {
+        case "pull_request" => body.get.transform(commentEventTransformer).get
         case "pull_request_review_comment" => body.get.transform(commentEventTransformer).get
         case "issue_comment" => body.get.transform(prCommentEventTransformer).get
         case "push" => body.get.transform(pushEventTransformer).get
