@@ -80,8 +80,8 @@ class EventService extends Controller {
   val prPushEventTransformer = (
       (JsPath \ "repo").json.copyFrom((JsPath \ "repository" \ "name").json.pick) and
       (JsPath \ "assignee").json.copyFrom((JsPath \ "pull_request" \ "assignee" \ "login").json.pick) and
-      (JsPath \ "ref").json.copyFrom((JsPath \ "ref").json.pick) and 
-      (JsPath \ "pusher").json.copyFrom((JsPath \ "pusher" \ "name").json.pick) 
+      (JsPath \ "ref").json.copyFrom((JsPath \ "pull_request" \ "head" \ "ref").json.pick) and 
+      (JsPath \ "pusher").json.copyFrom((JsPath \ "pull_request" \ "user" \ "login").json.pick) 
     ) reduce
   
   def getBodyType(body: Option[JsValue], eventType: String, groupid: String): JsValue = {
