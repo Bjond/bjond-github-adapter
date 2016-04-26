@@ -67,7 +67,13 @@ class RegistrationService extends Controller {
 		    EventField("1939ac70-60af-41d9-b36c-fce2fcf625d5", "ref", "Reference", "The full ref of the push. Ths includes the repository and branch.", "String", "d6ac9d97-93fb-4b15-900f-f627223d5193"),
 		    EventField("adfb3566-523c-40fd-a7fc-ad2dc66747a1", "repo", "Repository Name", "The name of the repository.", "String", "d6ac9d97-93fb-4b15-900f-f627223d5193")))
 		    
-		val availableEvents = Set(pullRequestEvent, pullRequestCommentEvent, pushEvent, issueCommentEvent)
+		val prPushEvent = EventDefinition("62e75091-173c-4230-87b6-421b5f3d1769", "push", "GitHub Pull Request Push", "Triggers when someone pushes a change to a pull request.", Set(
+		    EventField("023a858f-3cc1-4979-85c7-bd7b60010a21", "pusher", "Pusher", "The person who performed the push.", "Person", "62e75091-173c-4230-87b6-421b5f3d1769"),
+		    EventField("f4f12e92-3ebf-49ec-9c3d-1003c64b971b", "ref", "Reference", "The full ref of the push. Ths includes the repository and branch.", "String", "62e75091-173c-4230-87b6-421b5f3d1769"),
+		    EventField("df890b3f-0b7d-4531-ac6a-686d3e607ea6", "assignee", "Assignee", "The user to whom the Pull Request is assigned.", "Person", "62e75091-173c-4230-87b6-421b5f3d1769"),
+		    EventField("410fea37-aea6-43ae-ac4f-620af781bf67", "repo", "Repository Name", "The name of the repository.", "String", "62e75091-173c-4230-87b6-421b5f3d1769")))
+		    
+		val availableEvents = Set(pullRequestEvent, pullRequestCommentEvent, pushEvent, issueCommentEvent, prPushEvent)
 		
 		val postData = ServiceDefinition("fae29c14-a2bc-11f5-9121-1a5c11784914", "GitHub Integration", "Bjönd, Inc", 
 			"With this service you can react to events in your GitHub oganization or repository. For instance, you can send someone a task when an issue is assigned, or notify a manager when that task expires.",

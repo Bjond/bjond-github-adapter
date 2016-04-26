@@ -14,6 +14,7 @@ import scala.concurrent.duration._
 
 case class IssueComment(assignee: String, repo: String, pull_request: Option[String], user: String)
 case class CodePush(repo: String, ref: String, pusher: String)
+case class PRCodePush(repo: String, assignee: String, ref: String, pusher: String)
 
 class EventService extends Controller {
   
@@ -42,6 +43,20 @@ class EventService extends Controller {
         (JsPath \ "ref").read[String] and
         (JsPath \ "pusher").read[String]
     )(CodePush.apply _)
+    
+  implicit val prCodePushWrites: Writes[PRCodePush] = (
+        (JsPath \ "repo").write[String] and
+        (JsPath \ "assignee").write[String] and
+        (JsPath \ "ref").write[String] and
+        (JsPath \ "pusher").write[String]
+    )(unlift(PRCodePush.unapply))
+  
+  implicit val prCodePushReads: Reads[PRCodePush] = (
+        (JsPath \ "repo").read[String] and
+        (JsPath \ "assignee").read[String] and
+        (JsPath \ "ref").read[String] and
+        (JsPath \ "pusher").read[String]
+    )(PRCodePush.apply _)
       
   val prCommentEventTransformer = (
       (JsPath \ "assignee").json.copyFrom((JsPath \ "issue" \ "assignee" \ "login").json.pick) and
@@ -61,6 +76,13 @@ class EventService extends Controller {
       (JsPath \ "ref").json.copyFrom((JsPath \ "head" \ "ref").json.pick) and 
       (JsPath \ "pusher").json.copyFrom((JsPath \ "sender" \ "login").json.pick) 
     ) reduce
+    
+  val prPushEventTransformer = (
+      (JsPath \ "repo").json.copyFrom((JsPath \ "repository" \ "name").json.pick) and
+      (JsPath \ "assignee").json.copyFrom((JsPath \ "pull_request" \ "assignee" \ "login").json.pick) and
+      (JsPath \ "ref").json.copyFrom((JsPath \ "ref").json.pick) and 
+      (JsPath \ "pusher").json.copyFrom((JsPath \ "pusher" \ "name").json.pick) 
+    ) reduce
   
   def getBodyType(body: Option[JsValue], eventType: String, groupid: String): JsValue = {
     {
@@ -70,6 +92,7 @@ class EventService extends Controller {
         case "pull_request_review_comment" => body.get.transform(commentEventTransformer).get
         case "issue_comment" => body.get.transform(prCommentEventTransformer).get
         case "push" => body.get.transform(pushEventTransformer).get
+        case "pull_request_push" => body.get.transform(prPushEventTransformer).get
       }
       val newJson = setEvent(json, filteredEventType)
       transformUsers(newJson, groupid, List("user", "assignee"))
@@ -82,6 +105,7 @@ class EventService extends Controller {
         case "pull_request_review_comment" => "7c96b035-9502-4535-be70-bb052dc5f05c"
         case "issue_comment" => "2c3ffb6f-ddda-4f21-93f9-257d46271010"
         case "push" => "d6ac9d97-93fb-4b15-900f-f627223d5193"
+        case "pull_request_push" => "62e75091-173c-4230-87b6-421b5f3d1769"
         case "pull_request" => "cb29a497-a4c3-4672-bfa7-9b184d9b76d2"
         case _ => ""
      }
@@ -91,18 +115,15 @@ class EventService extends Controller {
   def setEvent(json: JsValue, eventType: String): JsValue = {
     val event: String = getEvent(json, eventType)
     json.as[JsObject] + ("event" -> Json.toJson(event))
-    //json.as[JsObject] + ("event" -> Json.toJson("7c96b035-9502-4535-be70-bb052dc5f05c"))
   }
   
   def transformUsers(json: JsValue, groupid: String, personkeys: List[String]): JsValue =  {
-    //var vars:Map[String, String] = Map()
     var returnVal: JsValue = json
     for (personkey <- personkeys) {
       val mongoService = new MongoService()
       val user = (json \ personkey).get.as[String]
       val bjondUserFuture = mongoService.getBjondID(groupid, user)
       val bjondUser = Await.result(bjondUserFuture, 2 seconds).get.userid
-      //vars += (personkey -> bjondUser)
       returnVal = json.as[JsObject] + (personkey -> Json.toJson(bjondUser))
     }
     returnVal
@@ -112,6 +133,9 @@ class EventService extends Controller {
     {
       if (eventType.equals("issue_comment") && !(json \ "issue" \ "pull_request").equals(null)) {
         "pull_request_review_comment"
+      }
+      else if(eventType.equals("push") && !(json \ "pull_request").equals(null)) {
+        "pull_request_push"
       }
       else {
         eventType
