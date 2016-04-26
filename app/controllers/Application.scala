@@ -137,7 +137,7 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
     val eventService = new EventService()
     future.map {
       response => 
-        val futureResponse: Future[String] = eventService.fireEvent(response.get.url, body, eventType.get).map {
+        val futureResponse: Future[String] = eventService.fireEvent(response.get.url, body, eventType.get, groupid).map {
     			response => (response.json \ "status").as[String]}
         futureResponse.recover {
           case e: Exception =>
