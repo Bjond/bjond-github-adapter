@@ -129,7 +129,7 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
   }
 
   def handleGitHubEvent(groupid: String) = Action.async { implicit request =>
-    val body = request.body.asJson
+    val body = request.body.asJson 
     Logger.info(body.get.toString()) 
     val mongoService = new MongoService()
     val future = mongoService.getGroupEndpoint(groupid)
