@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 
 case class IssueComment(assignee: String, repo: String, pull_request: Option[String], user: String)
 case class CodePush(repo: String, ref: String, pusher: String)
-case class PRCodePush(repo: String, assignee: String, ref: String, pusher: String)
+case class PRCodePush(repo: String, assignee: String)
 
 class EventService extends Controller {
   
@@ -46,16 +46,12 @@ class EventService extends Controller {
     
   implicit val prCodePushWrites: Writes[PRCodePush] = (
         (JsPath \ "repo").write[String] and
-        (JsPath \ "assignee").write[String] and
-        (JsPath \ "ref").write[String] and
-        (JsPath \ "pusher").write[String]
+        (JsPath \ "assignee").write[String]
     )(unlift(PRCodePush.unapply))
   
   implicit val prCodePushReads: Reads[PRCodePush] = (
         (JsPath \ "repo").read[String] and
-        (JsPath \ "assignee").read[String] and
-        (JsPath \ "ref").read[String] and
-        (JsPath \ "pusher").read[String]
+        (JsPath \ "assignee").read[String]
     )(PRCodePush.apply _) 
       
   val prCommentEventTransformer = (
@@ -79,9 +75,9 @@ class EventService extends Controller {
     
   val prPushEventTransformer = (
       (JsPath \ "repo").json.copyFrom((JsPath \ "repository" \ "name").json.pick) and
-      (JsPath \ "assignee").json.copyFrom((JsPath \ "pull_request" \ "assignee" \ "login").json.pick) and
-      (JsPath \ "ref").json.copyFrom((JsPath \ "pull_request" \ "head" \ "ref").json.pick) and 
-      (JsPath \ "pusher").json.copyFrom((JsPath \ "pull_request" \ "user" \ "login").json.pick) 
+      (JsPath \ "assignee").json.copyFrom((JsPath \ "pull_request" \ "assignee" \ "login").json.pick) //and
+      //(JsPath \ "ref").json.copyFrom((JsPath \ "pull_request" \ "head" \ "ref").json.pick) and 
+      //(JsPath \ "pusher").json.copyFrom((JsPath \ "pull_request" \ "user" \ "login").json.pick) 
     ) reduce
   
   def getBodyType(body: Option[JsValue], eventType: String, groupid: String): JsValue = {
