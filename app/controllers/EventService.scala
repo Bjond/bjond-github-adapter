@@ -56,7 +56,7 @@ class EventService extends Controller {
         (JsPath \ "assignee").read[String] and
         (JsPath \ "ref").read[String] and
         (JsPath \ "pusher").read[String]
-    )(PRCodePush.apply _)
+    )(PRCodePush.apply _) 
       
   val prCommentEventTransformer = (
       (JsPath \ "assignee").json.copyFrom((JsPath \ "issue" \ "assignee" \ "login").json.pick) and
