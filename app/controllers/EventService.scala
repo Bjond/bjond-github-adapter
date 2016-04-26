@@ -145,7 +145,7 @@ class EventService extends Controller {
   
   def fireEvent(url: String, json: Option[JsValue], event: String, groupid: String): Future[WSResponse] = {
     val bjondJson = getBodyType(json, event, groupid)
-    WS.url(url + "/" + getServiceId(json, event)).post(bjondJson)
+    WS.url(url + "/" + getServiceId(json, event)).post(bjondJson) 
   }
   
 }
