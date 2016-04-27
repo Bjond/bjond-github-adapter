@@ -11,12 +11,29 @@ import play.api.Play.current
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
 import scala.concurrent.duration._
+import pdi.jwt.{JwtJson, JwtAlgorithm, JwtClaim}, play.api.libs.json.Json
+import play.api.libs.json.Json
+import javax.crypto.spec.SecretKeySpec
+import java.util.Calendar
+import play.api.Play.current
+import org.jose4j.jwe.JsonWebEncryption
+import org.jose4j.jwe.KeyManagementAlgorithmIdentifiers
+import org.jose4j.jwe.ContentEncryptionAlgorithmIdentifiers
+import org.jose4j.keys.AesKey
+import org.jose4j.base64url.Base64
 
 case class IssueComment(assignee: String, repo: String, pull_request: Option[String], user: String)
 case class CodePush(repo: String, ref: String, pusher: String)
 case class PRCodePush(repo: String, assignee: String)
 
 class EventService extends Controller {
+  
+  val secret = "TzcxGruObx6IrfV5sgl/1A=="
+  val algo = JwtAlgorithm.HS256
+  val audience = Some("Bjönd, Inc")
+  val issuer = Some("Bjönd Health Inc.")
+  val subject = Some("development")
+  val notBefore = Some(120.toLong)
   
   implicit val issueCommentWrites: Writes[IssueComment] = (
         (JsPath \ "assignee").write[String] and
@@ -139,9 +156,23 @@ class EventService extends Controller {
     }
   }
   
+  def getJWTPayload(json: JsValue): JsonWebEncryption = {
+    val now = Calendar.getInstance
+    now.add(Calendar.MINUTE, 2);
+    val claim = new JwtClaim(json.toString(), issuer, subject, audience, Some(now.getTimeInMillis()), notBefore, Some(Calendar.getInstance.getTimeInMillis()))
+    val encodedKey = new AesKey(Base64.decode(secret))
+    val jwe = new JsonWebEncryption()
+    jwe.setPayload(claim.toJson)
+    jwe.setAlgorithmHeaderValue(KeyManagementAlgorithmIdentifiers.A128KW)
+    jwe.setEncryptionMethodHeaderParameter(ContentEncryptionAlgorithmIdentifiers.AES_128_CBC_HMAC_SHA_256)
+    jwe.setKey(encodedKey)
+    jwe
+  }
+  
   def fireEvent(url: String, json: Option[JsValue], event: String, groupid: String): Future[WSResponse] = {
-    val bjondJson = getBodyType(json, event, groupid)
-    WS.url(url + "/" + getServiceId(json, event)).post(bjondJson) 
+    val jwe = getJWTPayload(getBodyType(json, event, groupid))
+    val token = jwe.getCompactSerialization
+    WS.url(url + "/" + getServiceId(json, event)).post(token) 
   }
   
 }

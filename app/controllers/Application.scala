@@ -19,6 +19,7 @@ case class ServerData(server: String)
 class Application @Inject()(val messagesApi: MessagesApi) extends Controller with I18nSupport {
 
   implicit val context = play.api.libs.concurrent.Execution.Implicits.defaultContext
+  val eventService = new EventService()
 
   implicit val groupConfigurationWrites: Writes[GroupConfiguration] = (
         (JsPath \ "groupid").write[String] and
@@ -104,7 +105,7 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
     val mongoService = new MongoService()
     val future = mongoService.getGroupConfiguration(groupid)
     future.map {
-      response => if(response.isDefined) Ok(Json.toJson(response.get)) else Ok(Json.toJson(new GroupConfiguration("", "", "", "")))
+      response => if(response.isDefined) Ok(eventService.getJWTPayload(Json.toJson(response.get)).getCompactSerialization) else Ok(eventService.getJWTPayload(Json.toJson(new GroupConfiguration("", "", "", ""))).getCompactSerialization)
     }
   }
   
@@ -112,7 +113,7 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
     val mongoService = new MongoService()
     val future = mongoService.getUserConfiguration(groupid, userid)
     future.map {
-      response => if(response.isDefined) Ok(Json.toJson(response.get)) else Ok(Json.toJson(new UserConfiguration("", "", "")))
+      response => if(response.isDefined) Ok(eventService.getJWTPayload(Json.toJson(response.get)).getCompactSerialization) else Ok(eventService.getJWTPayload(Json.toJson(new UserConfiguration("", "", ""))).getCompactSerialization)
     }
   }
 
