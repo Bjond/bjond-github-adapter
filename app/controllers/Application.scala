@@ -34,7 +34,7 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
         (JsPath \ "username").read[String] and
         (JsPath \ "password").read[String]
     )(GroupConfiguration.apply _)
-    
+
   implicit val userConfigurationWrites: Writes[UserConfiguration] = (
         (JsPath \ "groupid").write[String] and
         (JsPath \ "userid").write[String] and
@@ -67,12 +67,12 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
 
   def schema = Action {
     val schema = createSchema[GroupConfiguration]
-    Ok(schema)
+    Ok(eventService.getJWTPayload(schema).getCompactSerialization)
   }
 
   def userSchema = Action {
     val schema = createSchema[UserConfiguration]
-    Ok(schema)
+    Ok(eventService.getJWTPayload(schema).getCompactSerialization)
   }
 
   def configureGroup(groupid: String) = Action.async { implicit request =>
@@ -87,11 +87,13 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
       )
     }
   }
-  
+
   def configureUser(groupid: String, userid: String) = Action.async { implicit request =>
     val body = request.body
     val mongoService = new MongoService()
-    val config = Json.fromJson[UserConfiguration](body.asJson.get)
+    val extracted = eventService.unpackJWTPayload(body.asText.get)
+    println(extracted)
+    val config = Json.fromJson[UserConfiguration](extracted)
     val future = mongoService.insertUserConfig(groupid, userid, config.get)
     future.map {
       response => Result(
@@ -108,7 +110,7 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
       response => if(response.isDefined) Ok(eventService.getJWTPayload(Json.toJson(response.get)).getCompactSerialization) else Ok(eventService.getJWTPayload(Json.toJson(new GroupConfiguration("", "", "", ""))).getCompactSerialization)
     }
   }
-  
+
   def getUserConfiguration(groupid: String, userid: String) = Action.async {
     val mongoService = new MongoService()
     val future = mongoService.getUserConfiguration(groupid, userid)
@@ -131,13 +133,13 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
 
   def handleGitHubEvent(groupid: String) = Action.async { implicit request =>
     val body = request.body.asJson
-    Logger.info(body.get.toString()) 
+    Logger.info(body.get.toString())
     val mongoService = new MongoService()
     val future = mongoService.getGroupEndpoint(groupid)
     val eventType = request.headers.get("X-GitHub-Event")
     val eventService = new EventService()
     future.map {
-      response => 
+      response =>
         val futureResponse: Future[String] = eventService.fireEvent(response.get.url, body, eventType.get, groupid).map {
     			response => (response.json \ "status").as[String]}
         futureResponse.recover {

@@ -21,82 +21,84 @@ import org.jose4j.jwe.KeyManagementAlgorithmIdentifiers
 import org.jose4j.jwe.ContentEncryptionAlgorithmIdentifiers
 import org.jose4j.keys.AesKey
 import org.jose4j.base64url.Base64
+import org.jose4j.jwt.consumer.JwtConsumer
+import org.jose4j.jwt.consumer.JwtConsumerBuilder
 
 case class IssueComment(assignee: String, repo: String, pull_request: Option[String], user: String)
 case class CodePush(repo: String, ref: String, pusher: String)
 case class PRCodePush(repo: String, assignee: String)
 
 class EventService extends Controller {
-  
-  val secret = "TzcxGruObx6IrfV5sgl/1A=="
+
+  val secret = "f0AgaeD2YAB1CNa9ti4Qdw=="
   val algo = JwtAlgorithm.HS256
   val audience = Some("Bjönd, Inc")
-  val issuer = Some("Bjönd Health Inc.")
+  val issuer = Some("Bjönd, Inc.")
   val subject = Some("development")
   val notBefore = Some(120.toLong)
-  
+
   implicit val issueCommentWrites: Writes[IssueComment] = (
         (JsPath \ "assignee").write[String] and
         (JsPath \ "repo").write[String] and
         (JsPath \ "pull_request").writeNullable[String] and
         (JsPath \ "user").write[String]
     )(unlift(IssueComment.unapply))
-  
+
   implicit val issueCommentReads: Reads[IssueComment] = (
         (JsPath \ "assignee").read[String] and
         (JsPath \ "repo").read[String] and
         (JsPath \ "pull_request").readNullable[String] and
         (JsPath \ "user").read[String]
     )(IssueComment.apply _)
-    
+
   implicit val codePushWrites: Writes[CodePush] = (
         (JsPath \ "repo").write[String] and
         (JsPath \ "ref").write[String] and
         (JsPath \ "pusher").write[String]
     )(unlift(CodePush.unapply))
-  
+
   implicit val codePushReads: Reads[CodePush] = (
         (JsPath \ "repo").read[String] and
         (JsPath \ "ref").read[String] and
         (JsPath \ "pusher").read[String]
     )(CodePush.apply _)
-    
+
   implicit val prCodePushWrites: Writes[PRCodePush] = (
         (JsPath \ "repo").write[String] and
         (JsPath \ "assignee").write[String]
     )(unlift(PRCodePush.unapply))
-  
+
   implicit val prCodePushReads: Reads[PRCodePush] = (
         (JsPath \ "repo").read[String] and
         (JsPath \ "assignee").read[String]
-    )(PRCodePush.apply _) 
-      
+    )(PRCodePush.apply _)
+
   val prCommentEventTransformer = (
       (JsPath \ "assignee").json.copyFrom((JsPath \ "issue" \ "assignee" \ "login").json.pick) and
-      (JsPath \ "user").json.copyFrom((JsPath \ "issue" \ "user" \ "login").json.pick) and 
+      (JsPath \ "user").json.copyFrom((JsPath \ "issue" \ "user" \ "login").json.pick) and
       (JsPath \ "repo").json.copyFrom((JsPath \ "repository" \ "name").json.pick) and
       (JsPath \ "pull_request").json.copyFrom((JsPath \ "issue" \ "number").json.pick)
     ) reduce
-    
+
   val commentEventTransformer = (
       (JsPath \ "assignee").json.copyFrom((JsPath \ "issue" \ "assignee" \ "login").json.pick) and
-      (JsPath \ "user").json.copyFrom((JsPath \ "issue" \ "user" \ "login").json.pick) and 
-      (JsPath \ "repo").json.copyFrom((JsPath \ "repository" \ "name").json.pick) 
+      (JsPath \ "user").json.copyFrom((JsPath \ "issue" \ "user" \ "login").json.pick) and
+      (JsPath \ "repo").json.copyFrom((JsPath \ "repository" \ "name").json.pick)
     ) reduce
-    
+
   val pushEventTransformer = (
-      (JsPath \ "repo").json.copyFrom((JsPath \ "head" \ "repo" \ "name").json.pick) and 
-      (JsPath \ "ref").json.copyFrom((JsPath \ "head" \ "ref").json.pick) and 
-      (JsPath \ "pusher").json.copyFrom((JsPath \ "sender" \ "login").json.pick) 
+      (JsPath \ "repo").json.copyFrom((JsPath \ "head" \ "repo" \ "name").json.pick) and
+      (JsPath \ "ref").json.copyFrom((JsPath \ "head" \ "ref").json.pick) and
+      (JsPath \ "pusher").json.copyFrom((JsPath \ "sender" \ "login").json.pick)
     ) reduce
-    
+
   val prPushEventTransformer = (
       (JsPath \ "repo").json.copyFrom((JsPath \ "repository" \ "name").json.pick) and
       (JsPath \ "assignee").json.copyFrom((JsPath \ "pull_request" \ "assignee" \ "login").json.pick) //and
-      //(JsPath \ "ref").json.copyFrom((JsPath \ "pull_request" \ "head" \ "ref").json.pick) and 
-      //(JsPath \ "pusher").json.copyFrom((JsPath \ "pull_request" \ "user" \ "login").json.pick) 
+      //(JsPath \ "ref").json.copyFrom((JsPath \ "pull_request" \ "head" \ "ref").json.pick) and
+      //(JsPath \ "pusher").json.copyFrom((JsPath \ "pull_request" \ "user" \ "login").json.pick)
     ) reduce
-  
+
   def getBodyType(body: Option[JsValue], eventType: String, groupid: String): JsValue = {
     {
       val filteredEventType: String = getEvent(body.get, eventType)
@@ -111,7 +113,7 @@ class EventService extends Controller {
       transformUsers(newJson, groupid, List("user", "assignee"))
     }
   }
-  
+
   def getServiceId(body: Option[JsValue], eventType: String): String = {
     val filteredEventType: String = getEvent(body.get, eventType)
     val eventid = filteredEventType match {
@@ -124,12 +126,12 @@ class EventService extends Controller {
      }
     eventid
   }
-  
+
   def setEvent(json: JsValue, eventType: String): JsValue = {
     val event: String = getEvent(json, eventType)
     json.as[JsObject] + ("event" -> Json.toJson(event))
   }
-  
+
   def transformUsers(json: JsValue, groupid: String, personkeys: List[String]): JsValue =  {
     var returnVal: JsValue = json
     for (personkey <- personkeys) {
@@ -141,8 +143,8 @@ class EventService extends Controller {
     }
     returnVal
   }
-  
-  def getEvent(json: JsValue, eventType: String): String = { 
+
+  def getEvent(json: JsValue, eventType: String): String = {
     {
       if (eventType.equals("issue_comment") && !(json \ "issue" \ "pull_request").equals(null)) {
         "pull_request_review_comment"
@@ -155,7 +157,7 @@ class EventService extends Controller {
       }
     }
   }
-  
+
   def getJWTPayload(json: JsValue): JsonWebEncryption = {
     val now = Calendar.getInstance
     now.add(Calendar.MINUTE, 2);
@@ -168,11 +170,24 @@ class EventService extends Controller {
     jwe.setKey(encodedKey)
     jwe
   }
-  
+
+  @throws(classOf[Exception])
+  def unpackJWTPayload(token: String): JsValue = {
+    try {
+      val consumer = new JwtConsumerBuilder().setRequireExpirationTime().setAllowedClockSkewInSeconds(30).setExpectedIssuer(issuer.get).setExpectedAudience(audience.get).setExpectedSubject(subject.get).setDecryptionKey(new AesKey(Base64.decode(secret))).setEnableRequireEncryption().setDisableRequireSignature().setSkipSignatureVerification().build()
+      val claims = consumer.processToClaims(token)
+      val claimsMap = claims.flattenClaims()
+      Json.parse(claimsMap.get("json").get(0).toString())
+    } catch {
+      case e: Exception => { e.printStackTrace()
+        throw e }
+    }
+  }
+
   def fireEvent(url: String, json: Option[JsValue], event: String, groupid: String): Future[WSResponse] = {
     val jwe = getJWTPayload(getBodyType(json, event, groupid))
     val token = jwe.getCompactSerialization
-    WS.url(url + "/" + getServiceId(json, event)).post(token) 
+    WS.url(url + "/" + getServiceId(json, event)).post(token)
   }
-  
+
 }
