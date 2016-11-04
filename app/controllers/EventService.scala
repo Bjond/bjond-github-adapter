@@ -30,7 +30,7 @@ case class PRCodePush(repo: String, assignee: String)
 
 class EventService extends Controller {
 
-  val secret = "f0AgaeD2YAB1CNa9ti4Qdw=="
+  val secret = "TwoO1OPciV3PWC7u11HoPA=="
   val algo = JwtAlgorithm.HS256
   val audience = Some("Bjönd, Inc")
   val issuer = Some("Bjönd, Inc.")
@@ -138,8 +138,8 @@ class EventService extends Controller {
       val mongoService = new MongoService()
       val user = (json \ personkey).get.as[String]
       val bjondUserFuture = mongoService.getBjondID(groupid, user)
-      val bjondUser = Await.result(bjondUserFuture, 2 seconds).get.userid
-      returnVal = json.as[JsObject] + (personkey -> Json.toJson(bjondUser))
+      //val bjondUser = Await.result(bjondUserFuture, 2 seconds).get.userid
+      returnVal = json.as[JsObject] + (personkey -> Json.toJson("fbe5dc55-8990-11e6-a68d-08626628865e")) // TODO: This isn't working- using hardcoded id to test.
     }
     returnVal
   }
