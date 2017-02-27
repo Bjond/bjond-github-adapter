@@ -16,8 +16,9 @@ libraryDependencies ++= Seq(
   specs2 % Test,
   "org.reactivemongo" %% "reactivemongo" % "0.11.9"
 )
+unmanagedJars in Compile <<= baseDirectory map { base => (base ** "*.jar").classpath }
 
-libraryDependencies += "org.coursera" %% "autoschema" % "0.2"
+//libraryDependencies += "org.coursera" %% "autoschema" % "0.2"
 libraryDependencies += "com.typesafe.play.extras" %% "iteratees-extras" % "1.5.0"
 // libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0"
 
