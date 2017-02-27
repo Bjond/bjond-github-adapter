@@ -75,11 +75,10 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
     Ok(eventService.getJWTPayload(schema).getCompactSerialization)
   }
 
-  def configureGroup(groupid: String, environment: String) = Action.async { implicit request =>
+  def configureGroup(groupid: String) = Action.async { implicit request =>
     val body = request.body
     val mongoService = new MongoService()
-    val extracted = eventService.unpackJWTPayload(body.asText.get)
-    val config = Json.fromJson[GroupConfiguration](extracted)
+    val config = Json.fromJson[GroupConfiguration](body.asJson.get)
     val future = mongoService.insertGroupConfig(groupid, config.get)
     future.map {
       response => Result(
@@ -89,7 +88,7 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
     }
   }
 
-  def configureUser(groupid: String, userid: String, environment: String) = Action.async { implicit request =>
+  def configureUser(groupid: String, userid: String) = Action.async { implicit request =>
     val body = request.body
     val mongoService = new MongoService()
     val extracted = eventService.unpackJWTPayload(body.asText.get)
@@ -119,7 +118,7 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
     }
   }
 
-  def registerBjondEndpoint(groupid: String, environment: String) = Action.async { implicit request =>
+  def registerBjondEndpoint(groupid: String) = Action.async { implicit request =>
     val mongoService = new MongoService()
     val endpoint = request.getQueryString("endpoint")
     val future = mongoService.insertGroupEndpoint(groupid, endpoint.get)
@@ -139,8 +138,8 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
     val eventType = request.headers.get("X-GitHub-Event")
     val eventService = new EventService()
     future.map {
-      response => // TODO: The URL is hardcoded. Might use Postgresql; mongo is a PITA.
-        val futureResponse: Future[String] = eventService.fireEvent("http://localhost:8080/server-core/services/integrationmanager/event/2751b72d-9e33-43c3-aa38-a584006e67bc/fae29c14-a2bc-11f5-9121-1a5c11784914", body, eventType.get, groupid).map {
+      response =>
+        val futureResponse: Future[String] = eventService.fireEvent(response.get.url, body, eventType.get, groupid).map {
     			response => (response.json \ "status").as[String]}
         futureResponse.recover {
           case e: Exception =>
