@@ -7,3 +7,5 @@ case class GroupConfiguration (@Term.Hide groupid: String, @Term.Description("Th
                                @Term.Description("Optional GitHub Password for Authentication") @Term.Title("Password") password: String)
 
 case class BjondRegistration(id: String, url: String)
+
+case class UserConfiguration (@Term.Hide groupid: String, @Term.Hide userid: String, @Term.Description("Your GitHub username.") @Term.Title("GitHub Username") gitHubUsername: String)

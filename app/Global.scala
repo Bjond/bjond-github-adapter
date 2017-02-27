@@ -27,6 +27,7 @@ object Global extends GlobalSettings {
     val db = connection("bjond_github_adapter")
     val index = true
     db[BSONCollection]("configurations").create(index)
+    db[BSONCollection]("user_configurations").create(index)
     db[BSONCollection]("endpoints").create(index)
   }
 }
